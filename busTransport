@@ -15,14 +15,16 @@ class CircularLinkedList:
         if not self.head:
             self.head = new_node
             new_node.next = self.head
-            passengers[0].append(0)  # Add passenger slot
+            passengers[0].append(0)  # Add slot in passenger array
+            print(f"{stop_name} inserted at position 1")
             return
         temp = self.head
         while temp.next != self.head:
             temp = temp.next
         temp.next = new_node
         new_node.next = self.head
-        passengers[0].append(0)  # Add passenger slot
+        passengers[0].append(0)
+        print(f"{stop_name} inserted at position {len(passengers[0])}")
 
     # Delete a stop
     def delete(self, stop_name, passengers):
@@ -34,7 +36,7 @@ class CircularLinkedList:
         prev = None
         index = 0
 
-        # Special case: head
+        # Special case: head node
         if temp.stop_name == stop_name:
             if temp.next == self.head:
                 self.head = None
@@ -63,18 +65,20 @@ class CircularLinkedList:
 
         print(f"{stop_name} not found")
 
-    # Search a stop
+    # Search a stop, returns node and position
     def search(self, stop_name):
         if not self.head:
-            return None
+            return None, -1
         temp = self.head
+        pos = 1
         while True:
             if temp.stop_name == stop_name:
-                return temp
+                return temp, pos
             temp = temp.next
+            pos += 1
             if temp == self.head:
                 break
-        return None
+        return None, -1
 
     # Display route
     def display(self):
@@ -116,6 +120,7 @@ def display_passengers():
 
 def add_passengers(stop_index, count):
     passengers[0][stop_index] += count
+    print(f"Added {count} passengers at Stop {stop_index+1}")
 
 def find_overcrowded(limit):
     print(f"\nOvercrowded Stops (limit {limit} passengers):")
@@ -135,6 +140,7 @@ num_stops = int(input("Enter number of stops in the route initially: "))
 for i in range(num_stops):
     name = input(f"Enter stop {i+1} name: ")
     route.insert(name, passengers)
+
 route.display()
 
 # Input initial passenger counts
@@ -160,22 +166,25 @@ while True:
     if choice == "1":
         name = input("Enter stop name to insert: ")
         route.insert(name, passengers)
-        print(f"{name} inserted")
+
     elif choice == "2":
         name = input("Enter stop name to delete: ")
         route.delete(name, passengers)
+
     elif choice == "3":
         name = input("Enter stop name to search: ")
-        node = route.search(name)
+        node, pos = route.search(name)
         if node:
-            idx = list(route.iterate()).index(node) if hasattr(route, 'iterate') else "unknown"
-            print(f"{name} found at position {idx+1}")
+            print(f"{name} found at stop position {pos}")
         else:
             print(f"{name} not found")
+
     elif choice == "4":
         route.display()
+
     elif choice == "5":
         display_passengers()
+
     elif choice == "6":
         display_passengers()
         stop = int(input("Enter stop number to add passengers: ")) - 1
@@ -184,13 +193,17 @@ while True:
             add_passengers(stop, count)
         else:
             print("Invalid stop number")
+
     elif choice == "7":
         limit = int(input("Enter passenger limit: "))
         find_overcrowded(limit)
+
     elif choice == "8":
         route.simulate()
+
     elif choice == "9":
         print("Exiting program")
         break
+
     else:
         print("Invalid choice")
