@@ -1,0 +1,196 @@
+# ---------- Node for Circular Linked List (Bus Stop) ----------
+class Node:
+    def __init__(self, stop_name):
+        self.stop_name = stop_name
+        self.next = None
+
+# ---------- Circular Linked List (Bus Route) ----------
+class CircularLinkedList:
+    def __init__(self):
+        self.head = None
+
+    # Insert a stop at the end
+    def insert(self, stop_name, passengers):
+        new_node = Node(stop_name)
+        if not self.head:
+            self.head = new_node
+            new_node.next = self.head
+            passengers[0].append(0)  # Add passenger slot
+            return
+        temp = self.head
+        while temp.next != self.head:
+            temp = temp.next
+        temp.next = new_node
+        new_node.next = self.head
+        passengers[0].append(0)  # Add passenger slot
+
+    # Delete a stop
+    def delete(self, stop_name, passengers):
+        if not self.head:
+            print("Route is empty")
+            return
+
+        temp = self.head
+        prev = None
+        index = 0
+
+        # Special case: head
+        if temp.stop_name == stop_name:
+            if temp.next == self.head:
+                self.head = None
+                passengers[0].pop(0)
+                print(f"{stop_name} deleted")
+                return
+            last = self.head
+            while last.next != self.head:
+                last = last.next
+            self.head = temp.next
+            last.next = self.head
+            passengers[0].pop(0)
+            print(f"{stop_name} deleted")
+            return
+
+        # Delete other node
+        while temp.next != self.head:
+            prev = temp
+            temp = temp.next
+            index += 1
+            if temp.stop_name == stop_name:
+                prev.next = temp.next
+                passengers[0].pop(index)
+                print(f"{stop_name} deleted")
+                return
+
+        print(f"{stop_name} not found")
+
+    # Search a stop
+    def search(self, stop_name):
+        if not self.head:
+            return None
+        temp = self.head
+        while True:
+            if temp.stop_name == stop_name:
+                return temp
+            temp = temp.next
+            if temp == self.head:
+                break
+        return None
+
+    # Display route
+    def display(self):
+        if not self.head:
+            print("Route is empty")
+            return
+        print("Bus Route: ", end="")
+        temp = self.head
+        while True:
+            print(temp.stop_name, end=" -> ")
+            temp = temp.next
+            if temp == self.head:
+                break
+        print("(circular)")
+
+    # Simulate bus movement
+    def simulate(self):
+        if not self.head:
+            print("Route is empty")
+            return
+        print("\nSimulating bus movement:")
+        temp = self.head
+        while True:
+            print(f"Bus arrived at {temp.stop_name}")
+            temp = temp.next
+            if temp == self.head:
+                break
+
+# ---------- 2D Array for Passenger Data ----------
+passengers = [[]]  # 1 route × N stops
+
+def display_passengers():
+    if not passengers[0]:
+        print("No passenger data")
+        return
+    print("\nPassenger Count at Stops:")
+    for i, count in enumerate(passengers[0]):
+        print(f"Stop {i+1}: {count} passengers")
+
+def add_passengers(stop_index, count):
+    passengers[0][stop_index] += count
+
+def find_overcrowded(limit):
+    print(f"\nOvercrowded Stops (limit {limit} passengers):")
+    found = False
+    for i, count in enumerate(passengers[0]):
+        if count > limit:
+            print(f"Stop {i+1} → {count} passengers")
+            found = True
+    if not found:
+        print("No stop exceeds the limit")
+
+# ---------- Main Program ----------
+route = CircularLinkedList()
+
+# Initial input
+num_stops = int(input("Enter number of stops in the route initially: "))
+for i in range(num_stops):
+    name = input(f"Enter stop {i+1} name: ")
+    route.insert(name, passengers)
+route.display()
+
+# Input initial passenger counts
+for i in range(len(passengers[0])):
+    passengers[0][i] = int(input(f"Enter passengers at stop {i+1}: "))
+
+display_passengers()
+
+# ---------- Menu ----------
+while True:
+    print("\nMenu:")
+    print("1- Insert Stop")
+    print("2- Delete Stop")
+    print("3- Search Stop")
+    print("4- Display Route")
+    print("5- Display Passenger Data")
+    print("6- Add Passengers to a Stop")
+    print("7- Find Overcrowded Stops")
+    print("8- Simulate Bus Movement")
+    print("9- Exit")
+    choice = input("Enter choice: ")
+
+    if choice == "1":
+        name = input("Enter stop name to insert: ")
+        route.insert(name, passengers)
+        print(f"{name} inserted")
+    elif choice == "2":
+        name = input("Enter stop name to delete: ")
+        route.delete(name, passengers)
+    elif choice == "3":
+        name = input("Enter stop name to search: ")
+        node = route.search(name)
+        if node:
+            idx = list(route.iterate()).index(node) if hasattr(route, 'iterate') else "unknown"
+            print(f"{name} found at position {idx+1}")
+        else:
+            print(f"{name} not found")
+    elif choice == "4":
+        route.display()
+    elif choice == "5":
+        display_passengers()
+    elif choice == "6":
+        display_passengers()
+        stop = int(input("Enter stop number to add passengers: ")) - 1
+        count = int(input("Enter number of passengers to add: "))
+        if 0 <= stop < len(passengers[0]):
+            add_passengers(stop, count)
+        else:
+            print("Invalid stop number")
+    elif choice == "7":
+        limit = int(input("Enter passenger limit: "))
+        find_overcrowded(limit)
+    elif choice == "8":
+        route.simulate()
+    elif choice == "9":
+        print("Exiting program")
+        break
+    else:
+        print("Invalid choice")
