@@ -3,17 +3,38 @@ ROWS = 10
 COLS = 5
 MAX_CAPACITY = 50
 
-# Create 10x5 seating layout (0 = empty, 1 = occupied)
+# 10x5 seating layout (0 = empty, 1 = occupied)
 bus_seats = [[0 for _ in range(COLS)] for _ in range(ROWS)]
 
-# Initial 5 fixed stops
-stops = ["Stop A", "Stop B", "Stop C", "Stop D", "Stop E"]
 
-# Keeps track of current stop in a circular linked list
-current_stop_index = 0
+# ---------- CIRCULAR LINKED LIST FOR STOPS ----------
+class StopNode:
+    def __init__(self, name):
+        self.name = name
+        self.next = None  # points to the next stop
 
 
-# ---------- SEATING ARRANGEMENT ----------
+# Initialize 5 fixed stops in a circular linked list
+stop_names = ["Stop A", "Stop B", "Stop C", "Stop D", "Stop E"]
+head_stop = None
+prev_node = None
+
+for name in stop_names:
+    node = StopNode(name)
+    if not head_stop:
+        head_stop = node
+    if prev_node:
+        prev_node.next = node
+    prev_node = node
+
+# Make it circular
+prev_node.next = head_stop
+
+# Keep track of the bus's current stop
+current_stop = head_stop
+
+
+# ---------- SEAT FUNCTIONS ----------
 def count_available_seats():
     count = 0
     for row in bus_seats:
@@ -24,9 +45,9 @@ def count_available_seats():
 
 
 def board_passengers_at_stop():
-    global current_stop_index
+    global current_stop
 
-    stop_name = stops[current_stop_index]
+    stop_name = current_stop.name
     print(f"\nBus arrived at {stop_name}")
 
     try:
@@ -39,10 +60,8 @@ def board_passengers_at_stop():
 
     if available == 0:
         print("Bus is FULL! No passengers can board.")
-
     elif num <= 0:
         print("No passengers boarded.")
-
     else:
         if num > available:
             print(f"Only {available} seats available.")
@@ -57,32 +76,57 @@ def board_passengers_at_stop():
 
         print(f"{added} passenger(s) boarded at {stop_name}")
 
-    # Move to next stop in circular behavior
-    current_stop_index = (current_stop_index + 1) % len(stops)
-    print(f"Next stop: {stops[current_stop_index]}")
+    # Move to next stop
+    current_stop = current_stop.next
+    print(f"Next stop: {current_stop.name}")
 
 
 def display_status():
     occupied = MAX_CAPACITY - count_available_seats()
 
+    # Traverse circular linked list to get all stops
+    stops_list = []
+    node = head_stop
+    while True:
+        stops_list.append(node.name)
+        node = node.next
+        if node == head_stop:
+            break
+
     print("\n----- BUS STATUS -----")
-    print(f"Current Stop: {stops[current_stop_index]}")
-    print(f"Total Stops: {len(stops)}")
-    print("Route:", " → ".join(stops))
+    print(f"Current Stop: {current_stop.name}")
+    print(f"Total Stops: {len(stops_list)}")
+    print("Route:", " → ".join(stops_list))
     print(f"Occupied Seats: {occupied}")
     print(f"Available Seats: {count_available_seats()}/{MAX_CAPACITY}")
     print("----------------------\n")
 
 
-# ---------- OPTIONAL ADDITIONAL STOPS MAXIMUM of 2 ----------
+# ---------- OPTIONAL ADDITIONAL STOPS (MAX 2) ----------
 def add_additional_stop():
-    if len(stops) >= 7:   # 5 original + 2 extra
+    global prev_node
+    # Count existing stops
+    count = 0
+    node = head_stop
+    while True:
+        count += 1
+        node = node.next
+        if node == head_stop:
+            break
+
+    if count >= 7:
         print("Maximum of 2 additional stops already added.\n")
         return
 
-    new_stop = input("Enter name of new stop: ")
-    stops.append(new_stop)
-    print(f"{new_stop} added to route.\n")
+    new_name = input("Enter name of new stop: ")
+    new_node = StopNode(new_name)
+
+    # Insert new node after last node (prev_node points to last)
+    new_node.next = head_stop
+    prev_node.next = new_node
+    prev_node = new_node  # update last node pointer
+
+    print(f"{new_name} added to route.\n")
 
 
 # ---------- MENU ----------
