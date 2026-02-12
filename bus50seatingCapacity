@@ -12,6 +12,8 @@ class StopNode:
     def __init__(self, name):
         self.name = name
         self.next = None  # points to the next stop
+        self.boarded = 0  # passengers boarded at this stop
+        self.alighted = 0  # passengers alighted at this stop
 
 
 # Initialize 5 fixed stops in a circular linked list
@@ -29,23 +31,17 @@ for name in stop_names:
 
 # Make it circular
 prev_node.next = head_stop
-
-# Keep track of the bus's current stop
 current_stop = head_stop
+total_passengers = 0  # total passengers on the bus
 
 
 # ---------- SEAT FUNCTIONS ----------
 def count_available_seats():
-    count = 0
-    for row in bus_seats:
-        for seat in row:
-            if seat == 0:
-                count += 1
-    return count
+    return sum(seat == 0 for row in bus_seats for seat in row)
 
 
 def board_passengers_at_stop():
-    global current_stop
+    global current_stop, total_passengers
 
     stop_name = current_stop.name
     print(f"\nBus arrived at {stop_name}")
@@ -74,7 +70,48 @@ def board_passengers_at_stop():
                     bus_seats[i][j] = 1
                     added += 1
 
+        current_stop.boarded += added
+        total_passengers += added
         print(f"{added} passenger(s) boarded at {stop_name}")
+
+    # Move to next stop
+    current_stop = current_stop.next
+    print(f"Next stop: {current_stop.name}")
+
+
+def alight_passengers_at_stop():
+    global current_stop, total_passengers
+
+    stop_name = current_stop.name
+    print(f"\nBus arrived at {stop_name}")
+
+    try:
+        num = int(input("Enter number of passengers alighting at this stop: "))
+    except ValueError:
+        print("Invalid input. No passengers alighted.")
+        num = 0
+
+    occupied = MAX_CAPACITY - count_available_seats()
+
+    if occupied == 0:
+        print("Bus is EMPTY! No passengers can alight.")
+    elif num <= 0:
+        print("No passengers alighted.")
+    else:
+        if num > occupied:
+            print(f"Only {occupied} passengers can alight.")
+            num = occupied
+
+        alighted = 0
+        for i in range(ROWS):
+            for j in range(COLS):
+                if bus_seats[i][j] == 1 and alighted < num:
+                    bus_seats[i][j] = 0
+                    alighted += 1
+
+        current_stop.alighted += alighted
+        total_passengers -= alighted
+        print(f"{alighted} passenger(s) alighted at {stop_name}")
 
     # Move to next stop
     current_stop = current_stop.next
@@ -88,7 +125,7 @@ def display_status():
     stops_list = []
     node = head_stop
     while True:
-        stops_list.append(node.name)
+        stops_list.append(f"{node.name}(Boarded: {node.boarded}, Alighted: {node.alighted})")
         node = node.next
         if node == head_stop:
             break
@@ -96,9 +133,11 @@ def display_status():
     print("\n----- BUS STATUS -----")
     print(f"Current Stop: {current_stop.name}")
     print(f"Total Stops: {len(stops_list)}")
-    print("Route:", " → ".join(stops_list))
+    print("Route (Boarded/Alighted per stop):")
+    print(" → ".join(stops_list))
     print(f"Occupied Seats: {occupied}")
     print(f"Available Seats: {count_available_seats()}/{MAX_CAPACITY}")
+    print(f"Total Passengers Onboard: {total_passengers}")
     print("----------------------\n")
 
 
@@ -129,24 +168,61 @@ def add_additional_stop():
     print(f"{new_name} added to route.\n")
 
 
+# ---------- REMOVE LAST ADDITIONAL STOP ----------
+def delete_additional_stop():
+    global prev_node
+    # Count stops
+    count = 0
+    node = head_stop
+    last_node = None
+    while True:
+        count += 1
+        last_node = node
+        node = node.next
+        if node == head_stop:
+            break
+
+    if count <= 5:
+        print("No additional stop to remove.\n")
+        return
+
+    confirm = input("Delete the last stop? (Y/N): ").strip().lower()
+    if confirm == 'y':
+        # Find second last node to update prev_node
+        node = head_stop
+        while node.next != prev_node:
+            node = node.next
+        node.next = head_stop
+        print(f"{prev_node.name} removed from route.\n")
+        prev_node = node
+    else:
+        print("No stops removed.\n")
+
+
 # ---------- MENU ----------
 def menu():
     while True:
         print("===== SMART BUS SYSTEM =====")
         print("1. Board Passengers at Current Stop")
-        print("2. Display Bus Status")
-        print("3. Add Additional Stop (Max 2)")
-        print("4. Exit")
+        print("2. Alight Passengers at Current Stop")
+        print("3. Display Bus Status")
+        print("4. Add Additional Stop (Max 2)")
+        print("5. Remove Last Additional Stop")
+        print("6. Exit")
 
-        choice = input("Enter choice (1-4): ")
+        choice = input("Enter choice (1-6): ")
 
         if choice == "1":
             board_passengers_at_stop()
         elif choice == "2":
-            display_status()
+            alight_passengers_at_stop()
         elif choice == "3":
-            add_additional_stop()
+            display_status()
         elif choice == "4":
+            add_additional_stop()
+        elif choice == "5":
+            delete_additional_stop()
+        elif choice == "6":
             print("Exiting system.")
             break
         else:
