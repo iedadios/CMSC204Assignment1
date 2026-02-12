@@ -1,0 +1,113 @@
+# ---------- BUS CONFIGURATION ----------
+ROWS = 10
+COLS = 5
+MAX_CAPACITY = 50
+
+# Create 10x5 seating layout (0 = empty, 1 = occupied)
+bus_seats = [[0 for _ in range(COLS)] for _ in range(ROWS)]
+
+# Initial 5 fixed stops
+stops = ["Stop A", "Stop B", "Stop C", "Stop D", "Stop E"]
+
+# Keeps track of current stop in a circular linked list
+current_stop_index = 0
+
+
+# ---------- SEATING ARRANGEMENT ----------
+def count_available_seats():
+    count = 0
+    for row in bus_seats:
+        for seat in row:
+            if seat == 0:
+                count += 1
+    return count
+
+
+def board_passengers_at_stop():
+    global current_stop_index
+
+    stop_name = stops[current_stop_index]
+    print(f"\nBus arrived at {stop_name}")
+
+    try:
+        num = int(input("Enter number of passengers boarding at this stop: "))
+    except ValueError:
+        print("Invalid input. No passengers boarded.")
+        num = 0
+
+    available = count_available_seats()
+
+    if available == 0:
+        print("Bus is FULL! No passengers can board.")
+
+    elif num <= 0:
+        print("No passengers boarded.")
+
+    else:
+        if num > available:
+            print(f"Only {available} seats available.")
+            num = available
+
+        added = 0
+        for i in range(ROWS):
+            for j in range(COLS):
+                if bus_seats[i][j] == 0 and added < num:
+                    bus_seats[i][j] = 1
+                    added += 1
+
+        print(f"{added} passenger(s) boarded at {stop_name}")
+
+    # Move to next stop in circular behavior
+    current_stop_index = (current_stop_index + 1) % len(stops)
+    print(f"Next stop: {stops[current_stop_index]}")
+
+
+def display_status():
+    occupied = MAX_CAPACITY - count_available_seats()
+
+    print("\n----- BUS STATUS -----")
+    print(f"Current Stop: {stops[current_stop_index]}")
+    print(f"Total Stops: {len(stops)}")
+    print("Route:", " → ".join(stops))
+    print(f"Occupied Seats: {occupied}")
+    print(f"Available Seats: {count_available_seats()}/{MAX_CAPACITY}")
+    print("----------------------\n")
+
+
+# ---------- OPTIONAL ADDITIONAL STOPS MAXIMUM of 2 ----------
+def add_additional_stop():
+    if len(stops) >= 7:   # 5 original + 2 extra
+        print("Maximum of 2 additional stops already added.\n")
+        return
+
+    new_stop = input("Enter name of new stop: ")
+    stops.append(new_stop)
+    print(f"{new_stop} added to route.\n")
+
+
+# ---------- MENU ----------
+def menu():
+    while True:
+        print("===== SMART BUS SYSTEM =====")
+        print("1. Board Passengers at Current Stop")
+        print("2. Display Bus Status")
+        print("3. Add Additional Stop (Max 2)")
+        print("4. Exit")
+
+        choice = input("Enter choice (1-4): ")
+
+        if choice == "1":
+            board_passengers_at_stop()
+        elif choice == "2":
+            display_status()
+        elif choice == "3":
+            add_additional_stop()
+        elif choice == "4":
+            print("Exiting system.")
+            break
+        else:
+            print("Invalid choice.\n")
+
+
+# Run system
+menu()
