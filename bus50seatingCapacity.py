@@ -6,6 +6,9 @@ MAX_CAPACITY = 50
 # 10x5 seating layout (0 = empty, 1 = occupied)
 bus_seats = [[0 for _ in range(COLS)] for _ in range(ROWS)]
 
+# Same size as bus_seats, stores the stop where the passenger boarded
+boarded_at = [[None for _ in range(COLS)] for _ in range(ROWS)]
+
 
 # ---------- CIRCULAR LINKED LIST FOR STOPS ----------
 class StopNode:
@@ -68,6 +71,7 @@ def board_passengers_at_stop():
             for j in range(COLS):
                 if bus_seats[i][j] == 0 and added < num:
                     bus_seats[i][j] = 1
+                    boarded_at[i][j] = stop_name
                     added += 1
 
         current_stop.boarded += added
@@ -85,17 +89,22 @@ def alight_passengers_at_stop():
     stop_name = current_stop.name
     print(f"\nBus arrived at {stop_name}")
 
-    try:
-        num = int(input("Enter number of passengers alighting at this stop: "))
-    except ValueError:
-        print("Invalid input. No passengers alighted.")
-        num = 0
+    # Validate 
+    while True:
+        num = input("Enter number of passengers alighting at this stop: ").strip()
+
+        if not num.isdigit():
+            print("Invalid input! Please enter a positive integer.")
+            continue
+
+        num = int(num)
+        break
 
     occupied = MAX_CAPACITY - count_available_seats()
 
     if occupied == 0:
         print("Bus is EMPTY! No passengers can alight.")
-    elif num <= 0:
+    elif num == 0:
         print("No passengers alighted.")
     else:
         if num > occupied:
@@ -107,6 +116,7 @@ def alight_passengers_at_stop():
             for j in range(COLS):
                 if bus_seats[i][j] == 1 and alighted < num:
                     bus_seats[i][j] = 0
+                    boarded_at[i][j] = None
                     alighted += 1
 
         current_stop.alighted += alighted
@@ -199,49 +209,43 @@ def delete_additional_stop():
         print("No stops removed.\n")
 
 # ---------- SEARCH STOP ----------
-def search_stop (route_name):
-    if not head_stop:
-        print ('Bus Station List is empty')
-        display_status()
-    
-    current = head_stop
-    
-    while True:
-        if current.name.strip().lower() == route_name:
-            print(f"Bus station '{route_name}' found.")
-            return True
-        current = current.next
-        if current == head_stop:
-            break
-
-    print(f"Bus station '{route_name}' not found.")
-    return False
-
-# ---------- SEARCH PASSENGERS ----------
-def search_passengers():
-    stop_name = input("Enter stop name to search passengers: ").strip().lower()
+def search_bus_stop():
+    # Search for a bus stop by name and display passengers boarded/alighted.
+    route_name = input("Enter stop name to search: ").strip().lower()
 
     if not head_stop:
-        print("Bus Station List is empty.\n")
+        print("No routes available.\n")
         return
 
-    current = head_stop
+    node = head_stop
     found = False
 
     while True:
-        if current.name.strip().lower() == stop_name:
-            print(f"\nPassengers at '{current.name}':")
-            print(f"Boarded: {current.boarded}")
-            print(f"Alighted: {current.alighted}\n")
+        if node.name.strip().lower() == route_name:
+            print(f"\nStop Found: {node.name}")
+            print(f"Passengers Boarded: {node.boarded}")
+            print(f"Passengers Alighted: {node.alighted}")
             found = True
             break
-
-        current = current.next
-        if current == head_stop:
+        node = node.next
+        if node == head_stop:
             break
 
     if not found:
-        print(f"Bus stop '{stop_name}' not found.\n")
+        print(f"Stop '{route_name}' not found.\n")
+
+# ---------- SEARCH PASSENGERS ----------
+def display_passenger_seats():
+    print("\n--- Passenger Seat Layout ---")
+    seat_number = 1
+    for i in range(ROWS):
+        for j in range(COLS):
+            if bus_seats[i][j] == 0:
+                print(f"Seat {seat_number:02} (Row {i+1}, Col {j+1}) → Empty")
+            else:
+                print(f"Seat {seat_number:02} (Row {i+1}, Col {j+1}) → Boarded at: {boarded_at[i][j]}")
+            seat_number += 1
+    print("-------------------------------\n")
 
 # ---------- MENU ----------
 def menu():
@@ -252,8 +256,8 @@ def menu():
         print("3. Display Bus Status")
         print("4. Add Additional Stop (Max 2)")
         print("5. Remove Last Additional Stop")
-        print("6. Search Stop")
-        print("7. Search Passengers")
+        print("6. Search Bus Stop")
+        print("7. Show where Passengers are seated")
         print("8. Exit")
 
         choice = input("Enter choice (1-8): ")
@@ -269,10 +273,11 @@ def menu():
         elif choice == "5":
             delete_additional_stop()
         elif choice == "6":
-            name = input("Enter stop name to search: ")
-            search_stop(name)
+            search_bus_stop()
+            display_status()
         elif choice == "7":
-            search_passengers()
+            display_passenger_seats()
+            display_status()
         elif choice == "8":
             print("Exiting system.")
             break
